@@ -35,7 +35,8 @@ impl Database {
                 twitter TEXT NOT NULL DEFAULT '',
                 avatar_url TEXT NOT NULL DEFAULT '',
                 location TEXT NOT NULL DEFAULT '',
-                resume_url TEXT NOT NULL DEFAULT ''
+                resume_url TEXT NOT NULL DEFAULT '',
+                summary TEXT NOT NULL DEFAULT ''
             )"
         ).execute(&self.pool).await?;
 
@@ -131,9 +132,10 @@ impl Database {
 
         if profile_count == 0 {
             sqlx::query(
-                "INSERT INTO profile (id, name, title, bio, email, github, linkedin, twitter, avatar_url, location, resume_url)
+                "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url)
                  VALUES ('profile', 'Your Name', 'Full-Stack Engineer',
                          'Passionate developer building elegant solutions to complex problems.',
+                         '',
                          'you@example.com', 'https://github.com/yourname',
                          'https://linkedin.com/in/yourname', 'https://twitter.com/yourname',
                          '', 'Your City, Country', '')"
@@ -147,7 +149,7 @@ impl Database {
 
     pub async fn get_profile(&self) -> Result<Profile, sqlx::Error> {
         let row = sqlx::query(
-            "SELECT id, name, title, bio, email, github, linkedin, twitter, avatar_url, location, resume_url
+            "SELECT id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url
              FROM profile WHERE id = 'profile'"
         )
         .fetch_one(&self.pool)
@@ -165,20 +167,21 @@ impl Database {
             avatar_url: row.get("avatar_url"),
             location:   row.get("location"),
             resume_url: row.get("resume_url"),
+            summary:    row.get("summary"),
         })
     }
 
     pub async fn update_profile(&self, p: &Profile) -> Result<(), sqlx::Error> {
         sqlx::query(
-            "INSERT INTO profile (id, name, title, bio, email, github, linkedin, twitter, avatar_url, location, resume_url)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
-               name=excluded.name, title=excluded.title, bio=excluded.bio,
+               name=excluded.name, title=excluded.title, bio=excluded.bio, summary=excluded.summary,
                email=excluded.email, github=excluded.github, linkedin=excluded.linkedin,
                twitter=excluded.twitter, avatar_url=excluded.avatar_url,
                location=excluded.location, resume_url=excluded.resume_url"
         )
-        .bind(&p.id).bind(&p.name).bind(&p.title).bind(&p.bio)
+        .bind(&p.id).bind(&p.name).bind(&p.title).bind(&p.bio).bind(&p.summary)
         .bind(&p.email).bind(&p.github).bind(&p.linkedin).bind(&p.twitter)
         .bind(&p.avatar_url).bind(&p.location).bind(&p.resume_url)
         .execute(&self.pool).await?;

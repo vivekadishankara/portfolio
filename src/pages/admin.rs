@@ -266,6 +266,7 @@ fn ProfileEditor(
     let name = RwSignal::new(profile.name.clone());
     let title = RwSignal::new(profile.title.clone());
     let bio = RwSignal::new(profile.bio.clone());
+    let summary = RwSignal::new(profile.summary.clone());
     let email = RwSignal::new(profile.email.clone());
     let github = RwSignal::new(profile.github.clone());
     let linkedin = RwSignal::new(profile.linkedin.clone());
@@ -279,6 +280,7 @@ fn ProfileEditor(
         let p = Profile {
             id: "profile".to_string(),
             name: name.get(), title: title.get(), bio: bio.get(),
+            summary: summary.get(),
             email: email.get(), github: github.get(), linkedin: linkedin.get(),
             twitter: twitter.get(), location: location.get(),
             avatar_url: avatar_url.get(), resume_url: resume_url.get(),
@@ -308,8 +310,11 @@ fn ProfileEditor(
                         <input class={input_class()} type="text" prop:value=move || title.get() on:input=move |e| title.set(event_target_value(&e))/>
                     </FormField>
                 </div>
-                <FormField label="Bio">
-                    <textarea class={textarea_class()} rows="4" prop:value=move || bio.get() on:input=move |e| bio.set(event_target_value(&e))/>
+                <FormField label="Bio (short, shown in hero)">
+                    <textarea class={textarea_class()} rows="3" prop:value=move || bio.get() on:input=move |e| bio.set(event_target_value(&e))/>
+                </FormField>
+                <FormField label="Summary (longer, shown in about section)">
+                    <textarea class={textarea_class()} rows="6" prop:value=move || summary.get() on:input=move |e| summary.set(event_target_value(&e))/>
                 </FormField>
                 <div class="grid grid-cols-2 gap-4">
                     <FormField label="Email">

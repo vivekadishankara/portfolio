@@ -177,8 +177,19 @@ fn AboutSection(profile: Profile) -> impl IntoView {
                         <h2 class="font-syne font-bold text-4xl md:text-5xl text-white mb-8 leading-tight">
                             "A developer who cares about the details"
                         </h2>
-                        <p class="text-zinc-400 text-lg leading-relaxed mb-6">{profile.bio}</p>
-                        <div class="flex items-center gap-3 text-zinc-500 font-mono text-sm">
+
+                        // Summary if available, fallback to bio
+                        {if !profile.summary.is_empty() {
+                            view! {
+                                <p class="text-zinc-400 text-lg leading-relaxed mb-4">{profile.summary.clone()}</p>
+                            }.into_any()
+                        } else {
+                            view! {
+                                <p class="text-zinc-400 text-lg leading-relaxed mb-4">{profile.bio.clone()}</p>
+                            }.into_any()
+                        }}
+
+                        <div class="flex items-center gap-3 text-zinc-500 font-mono text-sm mt-6">
                             <span class="text-emerald-400">{"📍"}</span>
                             <span>{profile.location}</span>
                         </div>
