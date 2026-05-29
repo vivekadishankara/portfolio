@@ -271,7 +271,14 @@ fn ExperienceCard(exp: Experience) -> impl IntoView {
                     </div>
                     <p class="text-emerald-400 font-mono text-sm tracking-wide mt-1">{exp.company}</p>
                 </div>
-                <p class="text-zinc-400 text-sm leading-relaxed mb-4">{exp.description}</p>
+                <ul class="space-y-1 mb-4">
+                    {exp.description.into_iter().map(|point| view! {
+                        <li class="flex items-start gap-2">
+                            <span class="text-emerald-400 shrink-0 leading-relaxed text-sm">"▸"</span>
+                            <span class="text-zinc-400 text-sm leading-relaxed">{point}</span>
+                        </li>
+                    }).collect_view()}
+                </ul>
                 <div class="flex flex-wrap gap-2">
                     {exp.technologies.into_iter().map(|tech| view! {
                         <span class="px-2 py-1 bg-zinc-800 text-zinc-300 font-mono text-xs">{tech}</span>

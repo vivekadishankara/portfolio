@@ -42,7 +42,7 @@ pub struct Experience {
     pub start_date: String,
     pub end_date: Option<String>,
     pub current: bool,
-    pub description: String,
+    pub description: Vec<String>,
     pub technologies: Vec<String>,
     pub order_index: i32,
 }
@@ -56,7 +56,7 @@ impl Default for Experience {
             start_date: String::new(),
             end_date: None,
             current: false,
-            description: String::new(),
+            description: vec![],
             technologies: vec![],
             order_index: 0,
         }

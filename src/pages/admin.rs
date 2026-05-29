@@ -417,7 +417,7 @@ fn ExperienceForm(
     let start_date = RwSignal::new(exp.start_date);
     let end_date = RwSignal::new(exp.end_date.unwrap_or_default());
     let current = RwSignal::new(exp.current);
-    let description = RwSignal::new(exp.description);
+    let description = RwSignal::new(exp.description.join("\n"));
     let technologies = RwSignal::new(exp.technologies.join(", "));
     let saving = RwSignal::new(false);
 
@@ -426,7 +426,8 @@ fn ExperienceForm(
             id: id.clone(), company: company.get(), role: role.get(),
             start_date: start_date.get(),
             end_date: if current.get() || end_date.get().is_empty() { None } else { Some(end_date.get()) },
-            current: current.get(), description: description.get(),
+            current: current.get(),
+            description: description.get().lines().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
             technologies: technologies.get().split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect(),
             order_index: 0,
         };
@@ -467,8 +468,8 @@ fn ExperienceForm(
                     prop:checked=move || current.get() on:change=move |e| current.set(event_target_checked(&e))/>
                 <label for="current-exp" class="font-mono text-xs text-zinc-400 tracking-widest uppercase">"Currently working here"</label>
             </div>
-            <FormField label="Description">
-                <textarea class={textarea_class()} rows="4" prop:value=move || description.get() on:input=move |e| description.set(event_target_value(&e))/>
+            <FormField label="Description (one bullet point per line)">
+                <textarea class={textarea_class()} rows="6" prop:value=move || description.get() on:input=move |e| description.set(event_target_value(&e))/>
             </FormField>
             <FormField label="Technologies (comma-separated)">
                 <input class={input_class()} type="text" placeholder="Rust, TypeScript, PostgreSQL"

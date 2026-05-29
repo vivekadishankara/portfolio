@@ -47,7 +47,7 @@ impl Database {
                 start_date TEXT NOT NULL,
                 end_date TEXT,
                 current INTEGER NOT NULL DEFAULT 0,
-                description TEXT NOT NULL DEFAULT '',
+                description TEXT NOT NULL DEFAULT '[]',
                 technologies TEXT NOT NULL DEFAULT '[]',
                 order_index INTEGER NOT NULL DEFAULT 0
             )"
@@ -201,13 +201,14 @@ impl Database {
             start_date:   r.get("start_date"),
             end_date:     r.get("end_date"),
             current:      r.get::<i64, _>("current") != 0,
-            description:  r.get("description"),
+            description:  serde_json::from_str(r.get("description")).unwrap_or_default(),
             technologies: serde_json::from_str(r.get("technologies")).unwrap_or_default(),
             order_index:  r.get::<i64, _>("order_index") as i32,
         }).collect())
     }
 
     pub async fn upsert_experience(&self, e: &Experience) -> Result<(), sqlx::Error> {
+        let desc = serde_json::to_string(&e.description).unwrap_or_default();
         let techs = serde_json::to_string(&e.technologies).unwrap_or_default();
         sqlx::query(
             "INSERT INTO experiences (id, company, role, start_date, end_date, current, description, technologies, order_index)
@@ -219,7 +220,7 @@ impl Database {
                order_index=excluded.order_index"
         )
         .bind(&e.id).bind(&e.company).bind(&e.role).bind(&e.start_date)
-        .bind(&e.end_date).bind(e.current as i64).bind(&e.description)
+        .bind(&e.end_date).bind(e.current as i64).bind(&desc)
         .bind(&techs).bind(e.order_index)
         .execute(&self.pool).await?;
         Ok(())
