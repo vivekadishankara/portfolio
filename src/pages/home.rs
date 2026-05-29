@@ -254,16 +254,22 @@ fn ExperienceCard(exp: Experience) -> impl IntoView {
         <div class="relative pl-10">
             <div class="absolute left-0 top-2 w-2 h-2 -translate-x-[4.5px] rounded-full bg-emerald-400"></div>
             <div class="bg-zinc-900 border border-zinc-800 p-6 hover:border-zinc-600 transition-colors">
-                <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
-                    <div>
-                        <h3 class="font-syne font-bold text-xl text-white">{exp.role}</h3>
-                        <p class="text-emerald-400 font-mono text-sm tracking-wide mt-1">{exp.company}</p>
+                <div class="mb-4">
+                    <div class="flex items-baseline gap-6 flex-wrap">
+                        <h3 class="font-syne font-bold text-xl text-white shrink-0">{exp.role}</h3>
+                        <span class="font-mono text-xs text-zinc-500 tracking-wider whitespace-nowrap">
+                            {exp.start_date.clone()}
+                            {if exp.current {
+                                " – Present".to_string()
+                            } else {
+                                exp.end_date.clone()
+                                    .filter(|s| !s.is_empty())
+                                    .map(|d| format!(" – {}", d))
+                                    .unwrap_or_default()
+                            }}
+                        </span>
                     </div>
-                    <div class="font-mono text-xs text-zinc-500 tracking-wider text-right">
-                        <p>{exp.start_date.clone()}</p>
-                        <p class="text-zinc-600">"to"</p>
-                        <p>{if exp.current { "Present".to_string() } else { exp.end_date.clone().unwrap_or_default() }}</p>
-                    </div>
+                    <p class="text-emerald-400 font-mono text-sm tracking-wide mt-1">{exp.company}</p>
                 </div>
                 <p class="text-zinc-400 text-sm leading-relaxed mb-4">{exp.description}</p>
                 <div class="flex flex-wrap gap-2">
