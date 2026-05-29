@@ -152,3 +152,21 @@ pub async fn change_password(token: String, username: String, new_password: Stri
     if !auth::is_valid_token(&token) { return Err(ServerFnError::new("Unauthorized")); }
     db.change_password(&username, &new_password).await.map_err(|e| ServerFnError::new(e.to_string()))
 }
+
+// ─── Theme ───────────────────────────────────────────────────────────────────
+
+#[server(GetTheme, "/api")]
+pub async fn get_theme() -> Result<String, ServerFnError> {
+    use crate::server::db::Database;
+    let db = use_context::<Database>().ok_or_else(|| ServerFnError::new("No DB context"))?;
+    let profile = db.get_profile().await.map_err(|e| ServerFnError::new(e.to_string()))?;
+    Ok(profile.theme)
+}
+
+#[server(SaveTheme, "/api")]
+pub async fn save_theme(token: String, theme: String) -> Result<(), ServerFnError> {
+    use crate::server::{db::Database, auth};
+    let db = use_context::<Database>().ok_or_else(|| ServerFnError::new("No DB context"))?;
+    if !auth::is_valid_token(&token) { return Err(ServerFnError::new("Unauthorized")); }
+    db.save_theme(&theme).await.map_err(|e| ServerFnError::new(e.to_string()))
+}

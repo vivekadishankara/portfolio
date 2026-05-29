@@ -15,6 +15,7 @@ pub struct Profile {
     pub avatar_url: String,
     pub location: String,
     pub resume_url: String,
+    pub theme: String,
 }
 
 impl Default for Profile {
@@ -32,6 +33,7 @@ impl Default for Profile {
             avatar_url: "".to_string(),
             location: "Your City, Country".to_string(),
             resume_url: "".to_string(),
+            theme: "dark-emerald".to_string(),
         }
     }
 }

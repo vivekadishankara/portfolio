@@ -36,7 +36,8 @@ impl Database {
                 avatar_url TEXT NOT NULL DEFAULT '',
                 location TEXT NOT NULL DEFAULT '',
                 resume_url TEXT NOT NULL DEFAULT '',
-                summary TEXT NOT NULL DEFAULT ''
+                summary TEXT NOT NULL DEFAULT '',
+                theme TEXT NOT NULL DEFAULT 'dark-emerald'
             )"
         ).execute(&self.pool).await?;
 
@@ -132,13 +133,13 @@ impl Database {
 
         if profile_count == 0 {
             sqlx::query(
-                "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url)
+                "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme)
                  VALUES ('profile', 'Your Name', 'Full-Stack Engineer',
                          'Passionate developer building elegant solutions to complex problems.',
                          '',
                          'you@example.com', 'https://github.com/yourname',
                          'https://linkedin.com/in/yourname', 'https://twitter.com/yourname',
-                         '', 'Your City, Country', '')"
+                         '', 'Your City, Country', '', 'dark-emerald')"
             ).execute(&self.pool).await?;
         }
 
@@ -149,7 +150,7 @@ impl Database {
 
     pub async fn get_profile(&self) -> Result<Profile, sqlx::Error> {
         let row = sqlx::query(
-            "SELECT id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url
+            "SELECT id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme
              FROM profile WHERE id = 'profile'"
         )
         .fetch_one(&self.pool)
@@ -168,22 +169,23 @@ impl Database {
             location:   row.get("location"),
             resume_url: row.get("resume_url"),
             summary:    row.get("summary"),
+            theme:      row.get("theme"),
         })
     }
 
     pub async fn update_profile(&self, p: &Profile) -> Result<(), sqlx::Error> {
         sqlx::query(
-            "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
                name=excluded.name, title=excluded.title, bio=excluded.bio, summary=excluded.summary,
                email=excluded.email, github=excluded.github, linkedin=excluded.linkedin,
                twitter=excluded.twitter, avatar_url=excluded.avatar_url,
-               location=excluded.location, resume_url=excluded.resume_url"
+               location=excluded.location, resume_url=excluded.resume_url, theme=excluded.theme"
         )
         .bind(&p.id).bind(&p.name).bind(&p.title).bind(&p.bio).bind(&p.summary)
         .bind(&p.email).bind(&p.github).bind(&p.linkedin).bind(&p.twitter)
-        .bind(&p.avatar_url).bind(&p.location).bind(&p.resume_url)
+        .bind(&p.avatar_url).bind(&p.location).bind(&p.resume_url).bind(&p.theme)
         .execute(&self.pool).await?;
         Ok(())
     }
@@ -423,6 +425,14 @@ impl Database {
         sqlx::query("UPDATE admin SET password_hash = ? WHERE username = ?")
             .bind(&hash).bind(username)
             .execute(&self.pool).await?;
+        Ok(())
+    }
+
+    pub async fn save_theme(&self, theme: &str) -> Result<(), sqlx::Error> {
+        sqlx::query("UPDATE profile SET theme = ? WHERE id = 'profile'")
+            .bind(theme)
+            .execute(&self.pool)
+            .await?;
         Ok(())
     }
 }

@@ -38,6 +38,7 @@ enum AdminTab {
     Skills,
     Certifications,
     Settings,
+    Theme,
 }
 
 impl std::fmt::Display for AdminTab {
@@ -50,6 +51,7 @@ impl std::fmt::Display for AdminTab {
             AdminTab::Skills => write!(f, "Skills"),
             AdminTab::Certifications => write!(f, "Certifications"),
             AdminTab::Settings => write!(f, "Settings"),
+            AdminTab::Theme => write!(f, "Theme"),
         }
     }
 }
@@ -131,6 +133,7 @@ pub fn AdminPage() -> impl IntoView {
                             AdminTab::Skills,
                             AdminTab::Certifications,
                             AdminTab::Settings,
+                            AdminTab::Theme,
                         ].into_iter().map(|tab| {
                             let tab_clone = tab.clone();
                             let label = tab.to_string();
@@ -207,6 +210,9 @@ fn AdminContent(
             AdminTab::Settings => view! {
                 <SettingsPanel token=token show_toast=show_toast/>
             }.into_any(),
+            AdminTab::Theme => view! {
+                <ThemePicker token=token show_toast=show_toast current_theme=data.get().profile.theme/>
+            }.into_any(),
         }}
     }
 }
@@ -274,6 +280,7 @@ fn ProfileEditor(
     let location = RwSignal::new(profile.location.clone());
     let avatar_url = RwSignal::new(profile.avatar_url.clone());
     let resume_url = RwSignal::new(profile.resume_url.clone());
+    let profile_theme = RwSignal::new(profile.theme.clone());
     let saving = RwSignal::new(false);
 
     let save = Action::new(move |_: &()| {
@@ -284,6 +291,7 @@ fn ProfileEditor(
             email: email.get(), github: github.get(), linkedin: linkedin.get(),
             twitter: twitter.get(), location: location.get(),
             avatar_url: avatar_url.get(), resume_url: resume_url.get(),
+            theme: profile_theme.get(),
         };
         let t = token.get();
         async move { update_profile(t, p).await }
@@ -1119,5 +1127,155 @@ fn SettingsPanel(
                 </div>
             </div>
         </AdminSection>
+    }
+}
+
+// ─── Theme Picker ─────────────────────────────────────────────────────────────
+
+#[component]
+fn ThemePicker(
+    token: RwSignal<String>,
+    show_toast: Callback<(bool, String)>,
+    current_theme: String,
+) -> impl IntoView {
+    let selected = RwSignal::new(current_theme);
+    let saving = RwSignal::new(false);
+
+    let save = Action::new(move |_: &()| {
+        let t = token.get();
+        let theme = selected.get();
+        async move { crate::api::save_theme(t, theme).await }
+    });
+
+    Effect::new(move |_| {
+        if let Some(r) = save.value().get() {
+            saving.set(false);
+            match r {
+                Ok(_) => {
+                    show_toast.run((true, "Theme saved! Refresh to see changes.".to_string()));
+                    // Apply theme immediately via JS
+                    #[cfg(feature = "hydrate")]
+                    {
+                        use web_sys::window;
+                        if let Some(win) = window() {
+                            if let Some(doc) = win.document() {
+                                if let Some(el) = doc.document_element() {
+                                    let _ = el.set_attribute("data-theme", &selected.get_untracked());
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(e) => show_toast.run((false, e.to_string())),
+            }
+        }
+    });
+
+    let themes: Vec<(&'static str, &'static str, &'static str, &'static str)> = vec![
+        ("dark-emerald", "Dark Emerald",  "#09090b", "#10b981"),
+        ("dark-blue",    "Dark Blue",     "#0a0f1e", "#3b82f6"),
+        ("dark-purple",  "Dark Purple",   "#0d0a1a", "#a855f7"),
+        ("dark-rose",    "Dark Rose",     "#0f0a0a", "#f43f5e"),
+        ("light",        "Light Purple",  "#ffffff", "#7c3aed"),
+        ("light-blue",   "Light Blue",    "#f0f9ff", "#0284c7"),
+    ];
+
+    view! {
+        <AdminSection title="Theme">
+            <div class="max-w-2xl">
+                <p class="font-mono text-xs text-zinc-500 tracking-widest mb-8 uppercase">
+                    "Select a colour scheme for your portfolio"
+                </p>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    {themes.into_iter().map(|(id, label, bg, accent)| {
+                        let id_str = id.to_string();
+                        let id_str2 = id_str.clone();
+                        view! {
+                            <button
+                                on:click=move |_| selected.set(id_str.clone())
+                                class=move || format!(
+                                    "relative p-4 border-2 transition-all duration-200 text-left {}",
+                                    if selected.get() == id_str2 {
+                                        "border-white scale-105 shadow-lg"
+                                    } else {
+                                        "border-zinc-700 hover:border-zinc-400"
+                                    }
+                                )
+                                style=move || format!("background-color: {}", bg)
+                            >
+                                // Accent swatch
+                                <div class="w-8 h-8 rounded-full mb-3"
+                                    style=move || format!("background-color: {}", accent)>
+                                </div>
+                                <p class="font-syne font-bold text-sm"
+                                    style=move || format!("color: {}", if bg == "#ffffff" || bg == "#f0f9ff" { "#0f172a" } else { "#ffffff" })>
+                                    {label}
+                                </p>
+                                <p class="font-mono text-xs mt-1 opacity-60"
+                                    style=move || format!("color: {}", if bg == "#ffffff" || bg == "#f0f9ff" { "#0f172a" } else { "#ffffff" })>
+                                    {id}
+                                </p>
+                                // Selected checkmark
+                                {move || if selected.get() == id {
+                                    view! {
+                                        <div class="absolute top-2 right-2 w-5 h-5 rounded-full bg-white flex items-center justify-center">
+                                            <span class="text-xs font-bold" style="color:#09090b">"✓"</span>
+                                        </div>
+                                    }.into_any()
+                                } else { view! { <span></span> }.into_any() }}
+                            </button>
+                        }
+                    }).collect_view()}
+                </div>
+
+                // Preview strip
+                <div class="mb-8 p-5 border border-zinc-700 space-y-3"
+                    style=move || {
+                        let t = selected.get();
+                        let (bg, accent) = theme_colors(&t);
+                        format!("background-color: {}; border-color: {}40", bg, accent)
+                    }>
+                    <p class="font-mono text-xs tracking-widest uppercase opacity-50 text-white">"Preview"</p>
+                    <div style=move || { let (_, accent) = theme_colors(&selected.get()); format!("color: {}", accent) }
+                        class="font-syne font-bold text-2xl">
+                        "Your Name"
+                    </div>
+                    <div class="text-zinc-400 text-sm">"Full Stack Engineer"</div>
+                    <div class="flex gap-2 mt-2">
+                        <span class="px-2 py-1 text-xs font-mono"
+                            style=move || { let (_, accent) = theme_colors(&selected.get()); format!("color: {}; border: 1px solid {}40; background: {}15", accent, accent, accent) }>
+                            "Rust"
+                        </span>
+                        <span class="px-2 py-1 text-xs font-mono"
+                            style=move || { let (_, accent) = theme_colors(&selected.get()); format!("color: {}; border: 1px solid {}40; background: {}15", accent, accent, accent) }>
+                            "Leptos"
+                        </span>
+                    </div>
+                </div>
+
+                <button
+                    class="px-8 py-3 font-syne font-bold text-xs tracking-widest uppercase transition-all duration-200 disabled:opacity-50"
+                    style=move || {
+                        let (_, accent) = theme_colors(&selected.get());
+                        format!("background-color: {}; color: #fff", accent)
+                    }
+                    disabled=move || saving.get()
+                    on:click=move |_| { saving.set(true); save.dispatch(()); }>
+                    {move || if saving.get() { "SAVING..." } else { "APPLY THEME" }}
+                </button>
+            </div>
+        </AdminSection>
+    }
+}
+
+fn theme_colors(theme: &str) -> (&'static str, &'static str) {
+    match theme {
+        "dark-blue"   => ("#0a0f1e", "#3b82f6"),
+        "dark-purple" => ("#0d0a1a", "#a855f7"),
+        "dark-rose"   => ("#0f0a0a", "#f43f5e"),
+        "light"       => ("#ffffff", "#7c3aed"),
+        "light-blue"  => ("#f0f9ff", "#0284c7"),
+        _             => ("#09090b", "#10b981"), // dark-emerald default
     }
 }
