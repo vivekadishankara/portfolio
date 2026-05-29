@@ -1,0 +1,9 @@
+/target
+/site
+*.db
+*.db-shm
+*.db-wal
+.env
+node_modules/
+dist/
+pkg/
