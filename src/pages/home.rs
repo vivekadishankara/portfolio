@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use leptos_meta::Title;
 use crate::models::*;
 use crate::api::get_portfolio_data;
 
@@ -59,6 +60,7 @@ fn PortfolioContent(portfolio: PortfolioData) -> impl IntoView {
         .collect();
 
     view! {
+        <Title text=profile.name.clone()/>
         <NavBar name=profile.name.clone()/>
         <HeroSection profile=profile.clone()/>
         <AboutSection profile=profile.clone()/>
