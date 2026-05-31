@@ -113,7 +113,7 @@ fn HeroSection(profile: Profile) -> impl IntoView {
             // Glow accent
             <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full t-accent-bg/5 blur-[120px] pointer-events-none"></div>
 
-            <div class="max-w-6xl mx-auto w-full relative z-10">
+            <div class="max-w-6xl mx-auto w-full relative z-10 pb-12">
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
                     <div class="flex-1">
                         <p class="font-mono t-accent text-sm tracking-[0.3em] mb-6 uppercase">"Hello, I'm"</p>
@@ -207,9 +207,9 @@ fn HeroSection(profile: Profile) -> impl IntoView {
                 </div>
             </div>
 
-            <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 t-text-muted">
+            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 t-text-muted opacity-60">
                 <span class="font-mono text-xs tracking-widest">"SCROLL"</span>
-                <div class="w-px h-12 bg-gradient-to-b from-zinc-600 to-transparent"></div>
+                <div class="w-px h-8 bg-gradient-to-b from-zinc-600 to-transparent"></div>
             </div>
         </section>
     }
