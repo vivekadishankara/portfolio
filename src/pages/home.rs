@@ -107,7 +107,7 @@ fn HeroSection(profile: Profile) -> impl IntoView {
     view! {
         <section id="hero" class="min-h-screen flex flex-col justify-center relative overflow-hidden px-6 pt-20">
             // Grid background
-            <div class="absolute inset-0 bg-[linear-gradient(to_right,#1a1a1a_1px,transparent_1px),linear-gradient(to_bottom,#1a1a1a_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-40"></div>
+            <div class="absolute inset-0 t-hero-grid-bg opacity-50"></div>
             // Glow accent
             <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full t-accent-bg/5 blur-[120px] pointer-events-none"></div>
 

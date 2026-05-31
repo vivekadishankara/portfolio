@@ -164,6 +164,13 @@
     color: var(--accent);
     border: 1px solid var(--accent-border);
   }
+
+  .t-hero-grid-bg {
+    background-image:
+      linear-gradient(to right, var(--accent-border) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--accent-border) 1px, transparent 1px);
+    background-size: 4rem 4rem;
+  }
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
