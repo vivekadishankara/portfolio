@@ -107,107 +107,115 @@ fn NavBar(name: String) -> impl IntoView {
 #[component]
 fn HeroSection(profile: Profile) -> impl IntoView {
     view! {
-        <section id="hero" class="min-h-screen flex flex-col justify-center relative overflow-hidden px-6 pt-20">
+        // Use min-h-screen with flex-col so content + scroll indicator share the vertical space
+        <section id="hero" class="min-h-screen flex flex-col relative overflow-hidden px-6">
             // Grid background
             <div class="absolute inset-0 t-hero-grid-bg opacity-50"></div>
             // Glow accent
             <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full t-accent-bg/5 blur-[120px] pointer-events-none"></div>
 
-            <div class="max-w-6xl mx-auto w-full relative z-10 pb-12">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
-                    <div class="flex-1">
-                        <p class="font-mono t-accent text-sm tracking-[0.3em] mb-6 uppercase">"Hello, I'm"</p>
-                        <h1 class="font-syne font-extrabold text-6xl md:text-8xl lg:text-9xl t-text-primary leading-none tracking-tight mb-6">
-                            {profile.name.clone()}
-                        </h1>
-                        <div class="flex items-center gap-4 mb-8">
-                            <div class="h-px w-12 t-accent-bg"></div>
-                            <p class="font-syne text-xl md:text-2xl t-text-secondary font-medium">{profile.title}</p>
+            // Top spacer (navbar height)
+            <div class="h-20 flex-shrink-0"></div>
+
+            // Main content — grows to fill available space, centers vertically
+            <div class="flex-1 flex items-center relative z-10">
+                <div class="max-w-6xl mx-auto w-full">
+                    <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
+                        // Left: text content
+                        <div class="flex-1 min-w-0">
+                            <p class="font-mono t-accent text-sm tracking-[0.3em] mb-4 uppercase">"Hello, I'm"</p>
+                            <h1 class="font-syne font-extrabold text-5xl md:text-7xl lg:text-8xl t-text-primary leading-none tracking-tight mb-4">
+                                {profile.name.clone()}
+                            </h1>
+                            <div class="flex items-center gap-4 mb-6">
+                                <div class="h-px w-12 t-accent-bg"></div>
+                                <p class="font-syne text-xl md:text-2xl t-text-secondary font-medium">{profile.title}</p>
+                            </div>
+                            <p class="t-text-secondary text-base md:text-lg max-w-xl leading-relaxed mb-8 font-light">{profile.bio.clone()}</p>
+
+                            // CTA Buttons
+                            <div class="flex flex-wrap gap-3 mb-8">
+                                <a href="#contact"
+                                    class="px-6 py-2.5 t-accent-bg hover:t-accent-bg text-zinc-950 font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
+                                    "Get In Touch"
+                                </a>
+                                <a href="#projects"
+                                    class="px-6 py-2.5 border t-border-hover hover:t-accent-border hover:t-accent t-text-secondary font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
+                                    "View Work"
+                                </a>
+                                <a href="/api/resume.pdf"
+                                    download=true
+                                    class="group relative px-6 py-2.5 border t-accent-border t-accent hover:t-accent-bg hover:text-zinc-950 font-syne font-bold text-sm tracking-wider transition-all duration-300 uppercase flex items-center gap-2 overflow-hidden">
+                                    <span class="absolute inset-0 t-accent-bg translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-300 ease-out -z-0"></span>
+                                    <span class="relative z-10 flex items-center gap-2">
+                                        <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+                                        </svg>
+                                        "Download Resume"
+                                    </span>
+                                </a>
+                                {if !profile.resume_url.is_empty() {
+                                    view! {
+                                        <a href={profile.resume_url} target="_blank"
+                                            class="px-6 py-2.5 border t-border t-text-secondary font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
+                                            "Resume ↗"
+                                        </a>
+                                    }.into_any()
+                                } else { view! { <span></span> }.into_any() }}
+                            </div>
+
+                            // Social links
+                            <div class="flex gap-6">
+                                {if !profile.github.is_empty() {
+                                    view! {
+                                        <a href={profile.github} target="_blank" class="t-text-muted hover:t-accent transition-colors font-mono text-sm tracking-widest uppercase">
+                                            "GitHub"
+                                        </a>
+                                    }.into_any()
+                                } else { view! { <span></span> }.into_any() }}
+                                {if !profile.linkedin.is_empty() {
+                                    view! {
+                                        <a href={profile.linkedin} target="_blank" class="t-text-muted hover:t-accent transition-colors font-mono text-sm tracking-widest uppercase">
+                                            "LinkedIn"
+                                        </a>
+                                    }.into_any()
+                                } else { view! { <span></span> }.into_any() }}
+                                {if !profile.twitter.is_empty() {
+                                    view! {
+                                        <a href={profile.twitter} target="_blank" class="t-text-muted hover:t-accent transition-colors font-mono text-sm tracking-widest uppercase">
+                                            "Twitter"
+                                        </a>
+                                    }.into_any()
+                                } else { view! { <span></span> }.into_any() }}
+                            </div>
                         </div>
-                        <p class="t-text-secondary text-lg max-w-xl leading-relaxed mb-12 font-light">{profile.bio.clone()}</p>
-                    </div>
-                    {if !profile.avatar_url.is_empty() {
-                        view! {
-                            <div class="flex-shrink-0 flex justify-center lg:justify-end">
-                                <div class="relative">
-                                    // Accent border ring
-                                    <div class="absolute -inset-1 rounded-full t-accent-bg opacity-30 blur-sm"></div>
-                                    <div class="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-2 t-accent-border">
-                                        <img
-                                            src={profile.avatar_url.clone()}
-                                            alt={profile.name}
-                                            class="w-full h-full object-cover"
-                                        />
+
+                        // Right: avatar — smaller so it fits comfortably
+                        {if !profile.avatar_url.is_empty() {
+                            view! {
+                                <div class="flex-shrink-0 flex justify-center lg:justify-end lg:self-start lg:mt-10">
+                                    <div class="relative">
+                                        <div class="absolute -inset-1 rounded-full t-accent-bg opacity-20 blur-sm"></div>
+                                        <div class="relative w-40 h-40 md:w-52 md:h-52 rounded-full overflow-hidden border-2 t-accent-border">
+                                            <img
+                                                src={profile.avatar_url.clone()}
+                                                alt={profile.name}
+                                                class="w-full h-full object-cover"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        }.into_any()
-                    } else { view! { <span></span> }.into_any() }}
-                </div>
-
-                <div class="flex flex-wrap gap-4">
-                    <a href="#contact"
-                        class="px-8 py-3 t-accent-bg hover:t-accent-bg text-zinc-950 font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
-                        "Get In Touch"
-                    </a>
-                    <a href="#projects"
-                        class="px-8 py-3 border t-border-hover hover:t-accent-border hover:t-accent t-text-secondary font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
-                        "View Work"
-                    </a>
-                    // ── Download Resume (always shown — live PDF from /api/resume.pdf) ──
-                    <a href="/api/resume.pdf"
-                        download=true
-                        class="group relative px-8 py-3 border t-accent-border t-accent hover:t-accent-bg hover:text-zinc-950 font-syne font-bold text-sm tracking-wider transition-all duration-300 uppercase flex items-center gap-2 overflow-hidden">
-                        // Animated fill on hover
-                        <span class="absolute inset-0 t-accent-bg translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-300 ease-out -z-0"></span>
-                        <span class="relative z-10 flex items-center gap-2">
-                            // Download arrow icon (SVG inline)
-                            <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5"
-                                xmlns="http://www.w3.org/2000/svg" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
-                            </svg>
-                            "Download Resume"
-                        </span>
-                    </a>
-                    // Optional external link if a resume_url is also set
-                    {if !profile.resume_url.is_empty() {
-                        view! {
-                            <a href={profile.resume_url} target="_blank"
-                                class="px-8 py-3 border border-zinc-700 hover:border-zinc-500 t-text-secondary hover:text-zinc-200 font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
-                                "Resume ↗"
-                            </a>
-                        }.into_any()
-                    } else { view! { <span></span> }.into_any() }}
-                </div>
-
-                <div class="flex gap-6 mt-12">
-                    {if !profile.github.is_empty() {
-                        view! {
-                            <a href={profile.github} target="_blank" class="t-text-muted hover:t-accent transition-colors font-mono text-sm tracking-widest uppercase">
-                                "GitHub"
-                            </a>
-                        }.into_any()
-                    } else { view! { <span></span> }.into_any() }}
-                    {if !profile.linkedin.is_empty() {
-                        view! {
-                            <a href={profile.linkedin} target="_blank" class="t-text-muted hover:t-accent transition-colors font-mono text-sm tracking-widest uppercase">
-                                "LinkedIn"
-                            </a>
-                        }.into_any()
-                    } else { view! { <span></span> }.into_any() }}
-                    {if !profile.twitter.is_empty() {
-                        view! {
-                            <a href={profile.twitter} target="_blank" class="t-text-muted hover:t-accent transition-colors font-mono text-sm tracking-widest uppercase">
-                                "Twitter"
-                            </a>
-                        }.into_any()
-                    } else { view! { <span></span> }.into_any() }}
+                            }.into_any()
+                        } else { view! { <span></span> }.into_any() }}
+                    </div>
                 </div>
             </div>
 
-            <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 t-text-muted opacity-60">
+            // SCROLL indicator — always at the bottom, never absolute
+            <div class="flex flex-col items-center gap-1 t-text-muted opacity-50 pb-4 flex-shrink-0">
                 <span class="font-mono text-xs tracking-widest">"SCROLL"</span>
                 <div class="w-px h-8 bg-gradient-to-b from-zinc-600 to-transparent"></div>
             </div>
