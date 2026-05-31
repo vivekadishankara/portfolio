@@ -1,14 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: {
-    relative: true,
-    files: ["*.html", "./src/**/*.rs"],
-    transform: {
-      rs: (content) => content.replace(/(?:^|\s)class:/g, ' '),
+  content: ["./src/**/*.rs", "./index.html"],
+  theme: {
+    extend: {
+      fontFamily: {
+        syne: ["Syne", "sans-serif"],
+        mono: ["DM Mono", "monospace"],
+      },
+      colors: {
+        emerald: {
+          400: "#34d399",
+          500: "#10b981",
+        },
+      },
+      animation: {
+        "spin-slow": "spin 3s linear infinite",
+      },
     },
   },
-  theme: {
-    extend: {},
-  },
   plugins: [],
-}
+};

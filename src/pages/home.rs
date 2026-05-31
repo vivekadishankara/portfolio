@@ -102,15 +102,36 @@ fn HeroSection(profile: Profile) -> impl IntoView {
             <div class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full t-accent-bg/5 blur-[120px] pointer-events-none"></div>
 
             <div class="max-w-6xl mx-auto w-full relative z-10">
-                <p class="font-mono t-accent text-sm tracking-[0.3em] mb-6 uppercase">"Hello, I'm"</p>
-                <h1 class="font-syne font-extrabold text-6xl md:text-8xl lg:text-9xl t-text-primary leading-none tracking-tight mb-6">
-                    {profile.name}
-                </h1>
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="h-px w-12 t-accent-bg"></div>
-                    <p class="font-syne text-xl md:text-2xl t-text-secondary font-medium">{profile.title}</p>
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
+                    <div class="flex-1">
+                        <p class="font-mono t-accent text-sm tracking-[0.3em] mb-6 uppercase">"Hello, I'm"</p>
+                        <h1 class="font-syne font-extrabold text-6xl md:text-8xl lg:text-9xl t-text-primary leading-none tracking-tight mb-6">
+                            {profile.name.clone()}
+                        </h1>
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="h-px w-12 t-accent-bg"></div>
+                            <p class="font-syne text-xl md:text-2xl t-text-secondary font-medium">{profile.title}</p>
+                        </div>
+                        <p class="t-text-secondary text-lg max-w-xl leading-relaxed mb-12 font-light">{profile.bio.clone()}</p>
+                    </div>
+                    {if !profile.avatar_url.is_empty() {
+                        view! {
+                            <div class="flex-shrink-0 flex justify-center lg:justify-end">
+                                <div class="relative">
+                                    // Accent border ring
+                                    <div class="absolute -inset-1 rounded-full t-accent-bg opacity-30 blur-sm"></div>
+                                    <div class="relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-2 t-accent-border">
+                                        <img
+                                            src={profile.avatar_url.clone()}
+                                            alt={profile.name}
+                                            class="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        }.into_any()
+                    } else { view! { <span></span> }.into_any() }}
                 </div>
-                <p class="t-text-secondary text-lg max-w-xl leading-relaxed mb-12 font-light">{profile.bio.clone()}</p>
 
                 <div class="flex flex-wrap gap-4">
                     <a href="#contact"
