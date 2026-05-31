@@ -53,15 +53,25 @@ fn PortfolioContent(portfolio: PortfolioData) -> impl IntoView {
     let skills = portfolio.skills.clone();
     let certifications = portfolio.certifications.clone();
 
+    let sections: Vec<String> = profile.section_order
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .collect();
+
     view! {
         <NavBar name=profile.name.clone()/>
         <HeroSection profile=profile.clone()/>
         <AboutSection profile=profile.clone()/>
-        <ExperienceSection experiences=experiences/>
-        <ProjectsSection projects=projects/>
-        <SkillsSection skills=skills/>
-        <EducationSection educations=educations/>
-        <CertificationsSection certifications=certifications/>
+        {move || sections.iter().map(|section| {
+            match section.as_str() {
+                "experience" => view! { <ExperienceSection experiences=experiences.clone()/> }.into_any(),
+                "projects" => view! { <ProjectsSection projects=projects.clone()/> }.into_any(),
+                "skills" => view! { <SkillsSection skills=skills.clone()/> }.into_any(),
+                "education" => view! { <EducationSection educations=educations.clone()/> }.into_any(),
+                "certifications" => view! { <CertificationsSection certifications=certifications.clone()/> }.into_any(),
+                _ => view! { <span></span> }.into_any()
+            }
+        }).collect_view()}
         <ContactSection profile=profile/>
         <Footer/>
     }

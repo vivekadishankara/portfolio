@@ -16,6 +16,7 @@ pub struct Profile {
     pub location: String,
     pub resume_url: String,
     pub theme: String,
+    pub section_order: String,
 }
 
 impl Default for Profile {
@@ -34,6 +35,7 @@ impl Default for Profile {
             location: "Your City, Country".to_string(),
             resume_url: "".to_string(),
             theme: "dark-emerald".to_string(),
+            section_order: "experience,projects,skills,education,certifications".to_string(),
         }
     }
 }

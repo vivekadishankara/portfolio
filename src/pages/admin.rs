@@ -281,6 +281,7 @@ fn ProfileEditor(
     let avatar_url = RwSignal::new(profile.avatar_url.clone());
     let resume_url = RwSignal::new(profile.resume_url.clone());
     let profile_theme = RwSignal::new(profile.theme.clone());
+    let section_order = RwSignal::new(profile.section_order.clone());
     let saving = RwSignal::new(false);
 
     let save = Action::new(move |_: &()| {
@@ -292,6 +293,7 @@ fn ProfileEditor(
             twitter: twitter.get(), location: location.get(),
             avatar_url: avatar_url.get(), resume_url: resume_url.get(),
             theme: profile_theme.get(),
+            section_order: section_order.get(),
         };
         let t = token.get();
         async move { update_profile(t, p).await }
@@ -347,12 +349,86 @@ fn ProfileEditor(
                 <FormField label="Resume URL">
                     <input class={input_class()} type="url" prop:value=move || resume_url.get() on:input=move |e| resume_url.set(event_target_value(&e))/>
                 </FormField>
+                
+                <SectionOrderManager section_order=section_order/>
+
                 <button class={btn_primary()} disabled=move || saving.get()
                     on:click=move |_| { saving.set(true); save.dispatch(()); }>
                     {move || if saving.get() { "SAVING..." } else { "SAVE PROFILE" }}
                 </button>
             </div>
         </AdminSection>
+    }
+}
+
+#[component]
+fn SectionOrderManager(section_order: RwSignal<String>) -> impl IntoView {
+    let sections = RwSignal::new(
+        section_order.get()
+            .split(',')
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect::<Vec<String>>()
+    );
+
+    Effect::new(move |_| {
+        section_order.set(sections.get().join(","));
+    });
+
+    let move_up = move |idx: usize| {
+        if idx > 0 {
+            sections.update(|list| {
+                list.swap(idx, idx - 1);
+            });
+        }
+    };
+
+    let move_down = move |idx: usize| {
+        if idx < sections.get().len() - 1 {
+            sections.update(|list| {
+                list.swap(idx, idx + 1);
+            });
+        }
+    };
+
+    view! {
+        <FormField label="Section Layout Order (Priority)">
+            <div class="space-y-2 mt-2 bg-zinc-900 border border-zinc-800 p-4 max-w-xl">
+                {move || sections.get().into_iter().enumerate().map(|(idx, name)| {
+                    let display_name = match name.as_str() {
+                        "experience" => "Work History (Experience)",
+                        "projects" => "Selected Work (Projects)",
+                        "skills" => "Technical Stack (Skills)",
+                        "education" => "Academic Background (Education)",
+                        "certifications" => "Credentials (Certifications)",
+                        _ => "Unknown Section"
+                    };
+                    let is_first = idx == 0;
+                    let is_last = idx == sections.get().len() - 1;
+                    view! {
+                        <div class="flex items-center justify-between p-2.5 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors">
+                            <span class="font-mono text-xs text-zinc-300 uppercase tracking-widest">{display_name}</span>
+                            <div class="flex gap-2">
+                                <button
+                                    type="button"
+                                    disabled=is_first
+                                    on:click=move |_| move_up(idx)
+                                    class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed font-mono text-xs text-zinc-300 border border-zinc-700 transition-colors">
+                                    "↑"
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled=is_last
+                                    on:click=move |_| move_down(idx)
+                                    class="px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 disabled:opacity-30 disabled:cursor-not-allowed font-mono text-xs text-zinc-300 border border-zinc-700 transition-colors">
+                                    "↓"
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }).collect_view()}
+            </div>
+        </FormField>
     }
 }
 

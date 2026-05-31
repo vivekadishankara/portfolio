@@ -37,9 +37,15 @@ impl Database {
                 location TEXT NOT NULL DEFAULT '',
                 resume_url TEXT NOT NULL DEFAULT '',
                 summary TEXT NOT NULL DEFAULT '',
-                theme TEXT NOT NULL DEFAULT 'dark-emerald'
+                theme TEXT NOT NULL DEFAULT 'dark-emerald',
+                section_order TEXT NOT NULL DEFAULT 'experience,projects,skills,education,certifications'
             )"
         ).execute(&self.pool).await?;
+
+        // Run schema migration for existing databases
+        let _ = sqlx::query(
+            "ALTER TABLE profile ADD COLUMN section_order TEXT NOT NULL DEFAULT 'experience,projects,skills,education,certifications'"
+        ).execute(&self.pool).await;
 
         sqlx::query(
             "CREATE TABLE IF NOT EXISTS experiences (
@@ -133,13 +139,13 @@ impl Database {
 
         if profile_count == 0 {
             sqlx::query(
-                "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme)
+                "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme, section_order)
                  VALUES ('profile', 'Your Name', 'Full-Stack Engineer',
                          'Passionate developer building elegant solutions to complex problems.',
                          '',
                          'you@example.com', 'https://github.com/yourname',
                          'https://linkedin.com/in/yourname', 'https://twitter.com/yourname',
-                         '', 'Your City, Country', '', 'dark-emerald')"
+                         '', 'Your City, Country', '', 'dark-emerald', 'experience,projects,skills,education,certifications')"
             ).execute(&self.pool).await?;
         }
 
@@ -150,42 +156,45 @@ impl Database {
 
     pub async fn get_profile(&self) -> Result<Profile, sqlx::Error> {
         let row = sqlx::query(
-            "SELECT id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme
+            "SELECT id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme, section_order
              FROM profile WHERE id = 'profile'"
         )
         .fetch_one(&self.pool)
         .await?;
 
         Ok(Profile {
-            id:         row.get("id"),
-            name:       row.get("name"),
-            title:      row.get("title"),
-            bio:        row.get("bio"),
-            email:      row.get("email"),
-            github:     row.get("github"),
-            linkedin:   row.get("linkedin"),
-            twitter:    row.get("twitter"),
-            avatar_url: row.get("avatar_url"),
-            location:   row.get("location"),
-            resume_url: row.get("resume_url"),
-            summary:    row.get("summary"),
-            theme:      row.get("theme"),
+            id:            row.get("id"),
+            name:          row.get("name"),
+            title:         row.get("title"),
+            bio:           row.get("bio"),
+            email:         row.get("email"),
+            github:        row.get("github"),
+            linkedin:      row.get("linkedin"),
+            twitter:       row.get("twitter"),
+            avatar_url:    row.get("avatar_url"),
+            location:      row.get("location"),
+            resume_url:    row.get("resume_url"),
+            summary:       row.get("summary"),
+            theme:         row.get("theme"),
+            section_order: row.get("section_order"),
         })
     }
 
     pub async fn update_profile(&self, p: &Profile) -> Result<(), sqlx::Error> {
         sqlx::query(
-            "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            "INSERT INTO profile (id, name, title, bio, summary, email, github, linkedin, twitter, avatar_url, location, resume_url, theme, section_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(id) DO UPDATE SET
                name=excluded.name, title=excluded.title, bio=excluded.bio, summary=excluded.summary,
                email=excluded.email, github=excluded.github, linkedin=excluded.linkedin,
                twitter=excluded.twitter, avatar_url=excluded.avatar_url,
-               location=excluded.location, resume_url=excluded.resume_url, theme=excluded.theme"
+               location=excluded.location, resume_url=excluded.resume_url, theme=excluded.theme,
+               section_order=excluded.section_order"
         )
         .bind(&p.id).bind(&p.name).bind(&p.title).bind(&p.bio).bind(&p.summary)
         .bind(&p.email).bind(&p.github).bind(&p.linkedin).bind(&p.twitter)
         .bind(&p.avatar_url).bind(&p.location).bind(&p.resume_url).bind(&p.theme)
+        .bind(&p.section_order)
         .execute(&self.pool).await?;
         Ok(())
     }
