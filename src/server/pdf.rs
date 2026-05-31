@@ -26,15 +26,17 @@ pub enum PdfError {
 impl std::fmt::Display for PdfError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PdfError::Io(e)        => write!(f, "IO error: {e}"),
-            PdfError::Tectonic(s)  => write!(f, "tectonic error: {s}"),
-            PdfError::Http(s)      => write!(f, "HTTP error fetching avatar: {s}"),
+            PdfError::Io(e) => write!(f, "IO error: {e}"),
+            PdfError::Tectonic(s) => write!(f, "tectonic error: {s}"),
+            PdfError::Http(s) => write!(f, "HTTP error fetching avatar: {s}"),
         }
     }
 }
 
 impl From<std::io::Error> for PdfError {
-    fn from(e: std::io::Error) -> Self { PdfError::Io(e) }
+    fn from(e: std::io::Error) -> Self {
+        PdfError::Io(e)
+    }
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -47,7 +49,7 @@ pub async fn generate_pdf(data: &PortfolioData) -> Result<Vec<u8>, PdfError> {
     // --- optionally download the avatar so LaTeX can embed it ----------------
     let avatar_path = if !data.profile.avatar_url.is_empty() {
         match download_avatar(&data.profile.avatar_url, tmp_path).await {
-            Ok(p)  => Some(p),
+            Ok(p) => Some(p),
             Err(e) => {
                 tracing::warn!("Could not fetch avatar for PDF: {e}");
                 None
@@ -111,10 +113,16 @@ pub async fn generate_pdf(data: &PortfolioData) -> Result<Vec<u8>, PdfError> {
 
 async fn download_avatar(url: &str, dir: &std::path::Path) -> Result<std::path::PathBuf, PdfError> {
     // Detect extension from URL (default to .jpg)
-    let ext = url.rsplit('.').next()
+    let ext = url
+        .rsplit('.')
+        .next()
         .and_then(|e| {
             let e = e.split('?').next().unwrap_or(e);
-            if ["jpg","jpeg","png","gif","webp"].contains(&e) { Some(e) } else { None }
+            if ["jpg", "jpeg", "png", "gif", "webp"].contains(&e) {
+                Some(e)
+            } else {
+                None
+            }
         })
         .unwrap_or("jpg");
 
@@ -146,25 +154,72 @@ fn escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 8);
     for ch in s.chars() {
         match ch {
-            '&'  => out.push_str(r"\&"),
-            '%'  => out.push_str(r"\%"),
-            '$'  => out.push_str(r"\$"),
-            '#'  => out.push_str(r"\#"),
-            '_'  => out.push_str(r"\_"),
-            '{'  => out.push_str(r"\{"),
-            '}'  => out.push_str(r"\}"),
-            '~'  => out.push_str(r"\textasciitilde{}"),
-            '^'  => out.push_str(r"\textasciicircum{}"),
+            '&' => out.push_str(r"\&"),
+            '%' => out.push_str(r"\%"),
+            '$' => out.push_str(r"\$"),
+            '#' => out.push_str(r"\#"),
+            '_' => out.push_str(r"\_"),
+            '{' => out.push_str(r"\{"),
+            '}' => out.push_str(r"\}"),
+            '~' => out.push_str(r"\textasciitilde{}"),
+            '^' => out.push_str(r"\textasciicircum{}"),
             '\\' => out.push_str(r"\textbackslash{}"),
-            '<'  => out.push_str(r"\textless{}"),
-            '>'  => out.push_str(r"\textgreater{}"),
-            c    => out.push(c),
+            '<' => out.push_str(r"\textless{}"),
+            '>' => out.push_str(r"\textgreater{}"),
+            c => out.push(c),
         }
     }
     out
 }
 
-fn esc(s: &str) -> String { escape(s) }
+fn esc(s: &str) -> String {
+    escape(s)
+}
+
+#[derive(Clone, Copy)]
+enum ResumeSection {
+    Experience,
+    Projects,
+    Skills,
+    Education,
+    Certifications,
+}
+
+impl ResumeSection {
+    fn from_slug(slug: &str) -> Option<Self> {
+        match slug {
+            "experience" => Some(Self::Experience),
+            "projects" => Some(Self::Projects),
+            "skills" => Some(Self::Skills),
+            "education" => Some(Self::Education),
+            "certifications" => Some(Self::Certifications),
+            _ => None,
+        }
+    }
+
+    fn default_order() -> [Self; 5] {
+        [
+            Self::Experience,
+            Self::Projects,
+            Self::Skills,
+            Self::Education,
+            Self::Certifications,
+        ]
+    }
+}
+
+fn ordered_resume_sections(section_order: &str) -> Vec<ResumeSection> {
+    let mut sections: Vec<ResumeSection> = section_order
+        .split(',')
+        .filter_map(|section| ResumeSection::from_slug(section.trim()))
+        .collect();
+
+    if sections.is_empty() {
+        sections.extend(ResumeSection::default_order());
+    }
+
+    sections
+}
 
 // ─── LaTeX template ──────────────────────────────────────────────────────────
 
@@ -174,7 +229,8 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
     let mut doc = String::new();
 
     // ── Preamble ─────────────────────────────────────────────────────────────
-    doc.push_str(r#"\documentclass[10pt,a4paper]{article}
+    doc.push_str(
+        r#"\documentclass[10pt,a4paper]{article}
 
 % ---- packages ----------------------------------------------------------------
 \usepackage[T1]{fontenc}
@@ -205,13 +261,15 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
 \hypersetup{
   colorlinks=true,
   urlcolor=accentdk,
-  pdfauthor={}"#);
+  pdfauthor={}"#,
+    );
     doc.push_str(&format!(
         ",\n  pdftitle={{{} --- Resume}}\n}}",
         esc(&p.name)
     ));
 
-    doc.push_str(r#"
+    doc.push_str(
+        r#"
 
 % ---- misc helpers ------------------------------------------------------------
 \setlength{\parindent}{0pt}
@@ -246,7 +304,8 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
 %  HEADER (Modern Clean Top)
 % =============================================================================
 \color{textPrimary}
-"#);
+"#,
+    );
 
     // Header layout: minipages for avatar and contact info
     doc.push_str("\\begin{minipage}[c]{\\textwidth}\n");
@@ -284,14 +343,14 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
         ));
     }
     if !p.location.is_empty() {
-        contact_parts.push(format!(
-            r"{{\sffamily {loc}}}",
-            loc = esc(&p.location)
-        ));
+        contact_parts.push(format!(r"{{\sffamily {loc}}}", loc = esc(&p.location)));
     }
     if !p.github.is_empty() {
         // Clean URL to display a nice label
-        let display_github = p.github.trim_start_matches("https://").trim_start_matches("http://");
+        let display_github = p
+            .github
+            .trim_start_matches("https://")
+            .trim_start_matches("http://");
         contact_parts.push(format!(
             r"\href{{{url}}}{{\sffamily {disp}}}",
             url = p.github,
@@ -299,7 +358,10 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
         ));
     }
     if !p.linkedin.is_empty() {
-        let display_li = p.linkedin.trim_start_matches("https://").trim_start_matches("http://");
+        let display_li = p
+            .linkedin
+            .trim_start_matches("https://")
+            .trim_start_matches("http://");
         contact_parts.push(format!(
             r"\href{{{url}}}{{\sffamily {disp}}}",
             url = p.linkedin,
@@ -308,13 +370,19 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
     }
 
     let contact_line = contact_parts.join(r" ~~\textbullet~~ ");
-    doc.push_str(&format!("    {{\\fontsize{{8.5}}{{11}}\\selectfont\\color{{textSecondary}} {contact_line}}}\n"));
+    doc.push_str(&format!(
+        "    {{\\fontsize{{8.5}}{{11}}\\selectfont\\color{{textSecondary}} {contact_line}}}\n"
+    ));
     doc.push_str("  \\end{minipage}\n");
     doc.push_str("\\end{minipage}\n");
 
     // Bio / Summary block
     if !p.summary.is_empty() || !p.bio.is_empty() {
-        let text = if !p.summary.is_empty() { &p.summary } else { &p.bio };
+        let text = if !p.summary.is_empty() {
+            &p.summary
+        } else {
+            &p.bio
+        };
         doc.push_str(&format!(
             r#"\vspace{{10pt}}
 {{\fontsize{{9}}{{13.5}}\selectfont\color{{textSecondary}} {text}}}
@@ -323,9 +391,26 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
         ));
     }
 
-    doc.push_str(r#"\vspace{10pt}
-"#);
+    doc.push_str(
+        r#"\vspace{10pt}
+"#,
+    );
 
+    for section in ordered_resume_sections(&p.section_order) {
+        match section {
+            ResumeSection::Experience => render_experience_section(&mut doc, data),
+            ResumeSection::Projects => render_projects_section(&mut doc, data),
+            ResumeSection::Skills => render_skills_section(&mut doc, data),
+            ResumeSection::Education => render_education_section(&mut doc, data),
+            ResumeSection::Certifications => render_certifications_section(&mut doc, data),
+        }
+    }
+
+    doc.push_str("\\end{document}\n");
+    doc
+}
+
+fn render_experience_section(doc: &mut String, data: &PortfolioData) {
     // ── Experience ───────────────────────────────────────────────────────────
     if !data.experiences.is_empty() {
         doc.push_str(r"\resumesection{Experience}");
@@ -334,7 +419,9 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
             let date_range = if exp.current {
                 format!("{} -- Present", esc(&exp.start_date))
             } else {
-                let end = exp.end_date.as_deref()
+                let end = exp
+                    .end_date
+                    .as_deref()
                     .filter(|s| !s.is_empty())
                     .map(esc)
                     .unwrap_or_default();
@@ -351,7 +438,9 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
             ));
 
             if !exp.description.is_empty() {
-                doc.push_str("\\begin{itemize}[leftmargin=1.2em, topsep=2pt, itemsep=2pt, parsep=0pt]\n");
+                doc.push_str(
+                    "\\begin{itemize}[leftmargin=1.2em, topsep=2pt, itemsep=2pt, parsep=0pt]\n",
+                );
                 for bullet in &exp.description {
                     doc.push_str(&format!("  \\item {{\\fontsize{{9}}{{12.5}}\\selectfont\\color{{textSecondary}} {}}}\n", esc(bullet)));
                 }
@@ -369,7 +458,9 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
             doc.push_str("\\vspace{8pt}\n\n");
         }
     }
+}
 
+fn render_education_section(doc: &mut String, data: &PortfolioData) {
     // ── Education ────────────────────────────────────────────────────────────
     if !data.educations.is_empty() {
         doc.push_str(r"\resumesection{Education}");
@@ -378,7 +469,9 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
             let years = if edu.current {
                 format!("{} -- Present", esc(&edu.start_year))
             } else {
-                let end = edu.end_year.as_deref()
+                let end = edu
+                    .end_year
+                    .as_deref()
                     .filter(|s| !s.is_empty())
                     .map(esc)
                     .unwrap_or_default();
@@ -412,7 +505,9 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
             doc.push_str("\\vspace{8pt}\n\n");
         }
     }
+}
 
+fn render_skills_section(doc: &mut String, data: &PortfolioData) {
     // ── Skills ───────────────────────────────────────────────────────────────
     if !data.skills.is_empty() {
         doc.push_str(r"\resumesection{Skills}");
@@ -436,7 +531,9 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
         }
         doc.push_str("\\end{tabularx}\n\\vspace{6pt}\n\n");
     }
+}
 
+fn render_certifications_section(doc: &mut String, data: &PortfolioData) {
     // ── Certifications ───────────────────────────────────────────────────────
     if !data.certifications.is_empty() {
         doc.push_str(r"\resumesection{Certifications}");
@@ -444,9 +541,11 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
 
         for cert in &data.certifications {
             let name_part = if let Some(url) = &cert.credential_url {
-                format!(r"\href{{{url}}}{{\textbf{{{name}}}}} \tiny$\nearrow$",
-                    url  = url,
-                    name = esc(&cert.name))
+                format!(
+                    r"\href{{{url}}}{{\textbf{{{name}}}}} \tiny$\nearrow$",
+                    url = url,
+                    name = esc(&cert.name)
+                )
             } else {
                 format!(r"\textbf{{{}}}", esc(&cert.name))
             };
@@ -460,9 +559,13 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
         }
         doc.push_str("\\vspace{6pt}\n\n");
     }
+}
 
+fn render_projects_section(doc: &mut String, data: &PortfolioData) {
     // ── Featured Projects ────────────────────────────────────────────────────
-    let featured_projects: Vec<&Project> = data.projects.iter()
+    let featured_projects: Vec<&Project> = data
+        .projects
+        .iter()
         .filter(|p| p.featured)
         .take(3)
         .collect();
@@ -505,7 +608,4 @@ pub fn render_latex(data: &PortfolioData, avatar_path: Option<&std::path::Path>)
             doc.push_str("\\vspace{8pt}\n\n");
         }
     }
-
-    doc.push_str("\\end{document}\n");
-    doc
 }
