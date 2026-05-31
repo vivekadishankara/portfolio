@@ -142,6 +142,24 @@ fn HeroSection(profile: Profile) -> impl IntoView {
                         class="px-8 py-3 border t-border-hover hover:t-accent-border hover:t-accent t-text-secondary font-syne font-bold text-sm tracking-wider transition-all duration-200 uppercase">
                         "View Work"
                     </a>
+                    // ── Download Resume (always shown — live PDF from /api/resume.pdf) ──
+                    <a href="/api/resume.pdf"
+                        download=true
+                        class="group relative px-8 py-3 border t-accent-border t-accent hover:t-accent-bg hover:text-zinc-950 font-syne font-bold text-sm tracking-wider transition-all duration-300 uppercase flex items-center gap-2 overflow-hidden">
+                        // Animated fill on hover
+                        <span class="absolute inset-0 t-accent-bg translate-x-[-101%] group-hover:translate-x-0 transition-transform duration-300 ease-out -z-0"></span>
+                        <span class="relative z-10 flex items-center gap-2">
+                            // Download arrow icon (SVG inline)
+                            <svg class="w-4 h-4 transition-transform duration-200 group-hover:translate-y-0.5"
+                                xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/>
+                            </svg>
+                            "Download Resume"
+                        </span>
+                    </a>
+                    // Optional external link if a resume_url is also set
                     {if !profile.resume_url.is_empty() {
                         view! {
                             <a href={profile.resume_url} target="_blank"
