@@ -1,11 +1,12 @@
+pub mod api;
 pub mod app;
 pub mod components;
+pub mod error;
 pub mod models;
 pub mod pages;
-pub mod api;           // server functions — must be available on BOTH ssr and hydrate
+pub mod state;
 #[cfg(feature = "ssr")]
 pub mod server;
-pub mod state;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

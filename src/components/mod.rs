@@ -1,2 +1,10 @@
-// Components are defined inline within pages for this project.
-// Add shared components here as needed.
+pub mod hero;
+pub mod about;
+pub mod experience;
+pub mod projects;
+pub mod skills;
+pub mod education;
+pub mod certifications;
+pub mod contact;
+pub mod nav;
+pub mod shared;
