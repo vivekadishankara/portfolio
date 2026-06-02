@@ -1,4 +1,4 @@
-mod shared;
+pub mod shared;
 mod profile;
 mod experience;
 mod education;

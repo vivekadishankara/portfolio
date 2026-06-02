@@ -71,8 +71,8 @@ pub fn clear_auth() {
     }
 }
 
+#[cfg(feature = "hydrate")]
 pub fn store_auth(token: &str, username: &str) {
-    #[cfg(feature = "hydrate")]
     {
         use web_sys::window;
         if let Some(win) = window() {

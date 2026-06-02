@@ -17,26 +17,17 @@ pub fn LoginPage() -> impl IntoView {
         }
     });
 
-    let navigate = use_navigate();
+    let _navigate = use_navigate();
 
     Effect::new(move |_| {
         if let Some(result) = login_action.value().get() {
             loading.set(false);
             match result {
                 Ok(resp) if resp.success => {
+                    #[cfg(feature = "hydrate")]
                     if let Some(token) = resp.token {
-                        // Store token in localStorage
-                        #[cfg(feature = "hydrate")]
-                        {
-                            use web_sys::window;
-                            if let Some(win) = window() {
-                                if let Ok(Some(storage)) = win.local_storage() {
-                                    let _ = storage.set_item("admin_token", &token);
-                                    let _ = storage.set_item("admin_username", &username.get_untracked());
-                                }
-                            }
-                        }
-                        navigate("/admin", Default::default());
+                        crate::pages::admin::shared::store_auth(&token, &username.get_untracked());
+                        _navigate("/admin", Default::default());
                     }
                 }
                 Ok(resp) => error.set(resp.message),

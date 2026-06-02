@@ -102,8 +102,8 @@ fn theme_colors(theme: &str) -> (&'static str, &'static str) {
         .unwrap_or(("#09090b", "#10b981"))
 }
 
+#[cfg(feature = "hydrate")]
 fn apply_theme_to_dom(theme: &str) {
-    #[cfg(feature = "hydrate")]
     {
         use web_sys::window;
         if let Some(win) = window() {
@@ -135,6 +135,7 @@ pub fn ThemePicker(
             saving.set(false);
             match r {
                 Ok(_) => {
+                    #[cfg(feature = "hydrate")]
                     apply_theme_to_dom(&selected.get_untracked());
                     show_toast.run((true, "Theme applied!".into()));
                 }
