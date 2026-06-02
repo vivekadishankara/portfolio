@@ -37,10 +37,15 @@ pub fn ProjectsSection(projects: Vec<Project>) -> impl IntoView {
 
 #[component]
 fn FeaturedCard(project: Project) -> impl IntoView {
-    let desc = if project.long_description.is_empty() {
-        project.description.clone()
+    // Split long_description into bullet points by newline, fall back to description
+    let bullets: Vec<String> = if !project.long_description.is_empty() {
+        project.long_description
+            .lines()
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty())
+            .collect()
     } else {
-        project.long_description.clone()
+        vec![project.description.clone()]
     };
 
     view! {
@@ -65,7 +70,14 @@ fn FeaturedCard(project: Project) -> impl IntoView {
                     })}
                 </div>
             </div>
-            <p class="t-text-secondary leading-relaxed mb-6">{desc}</p>
+            <ul class="space-y-1 mb-6">
+                {bullets.into_iter().map(|point| view! {
+                    <li class="flex items-start gap-2">
+                        <span class="t-accent shrink-0 leading-relaxed text-sm">"▸"</span>
+                        <span class="t-text-secondary text-sm leading-relaxed">{point}</span>
+                    </li>
+                }).collect_view()}
+            </ul>
             <div class="flex flex-wrap gap-2">
                 {project.technologies.into_iter().map(|t| view! { <AccentTag name=t/> }).collect_view()}
             </div>
