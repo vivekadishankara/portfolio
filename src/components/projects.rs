@@ -47,6 +47,7 @@ fn FeaturedCard(project: Project) -> impl IntoView {
     } else {
         vec![project.description.clone()]
     };
+    let short_desc = project.description.clone();
 
     view! {
         <div class="border t-border hover:t-accent-border transition-all duration-300 p-8 t-bg-secondary group">
@@ -56,6 +57,9 @@ fn FeaturedCard(project: Project) -> impl IntoView {
                     <h3 class="font-syne font-bold text-2xl t-text-primary group-hover:t-accent transition-colors">
                         {project.title}
                     </h3>
+                    {(!short_desc.is_empty()).then(|| view! {
+                        <p class="t-text-muted text-sm mt-2">{short_desc.clone()}</p>
+                    })}
                 </div>
                 <div class="flex gap-4">
                     {project.github_url.map(|url| view! {
