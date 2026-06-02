@@ -32,7 +32,7 @@ pub fn OptionalLink(
     #[prop(optional, into)] href: Option<String>,
 ) -> impl IntoView {
     view! {
-        <div class="flex items-start gap-4 p-4 border t-border hover:t-border-hover transition-colors">
+        <div class="flex items-start gap-0 p-4 border t-border hover:t-border-hover transition-colors">
             <span class="font-mono text-xs t-accent tracking-widest uppercase pt-1 min-w-24">{label}</span>
             {match href.filter(|s| !s.is_empty()) {
                 Some(url) => view! {
