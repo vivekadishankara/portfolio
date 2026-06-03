@@ -2,8 +2,8 @@
 
 A professional full-stack portfolio website built with:
 - **Rust** — The backend and frontend logic
-- **Leptos 0.7** — Full-stack reactive UI framework (SSR + WASM hydration)
-- **Axum 0.7** — HTTP server
+- **Leptos 0.8** — Full-stack reactive UI framework (SSR + WASM hydration)
+- **Axum 0.8** — HTTP server
 - **SQLite** via SQLx — Local database
 - **TailwindCSS** — Styling
 - **JWT** — Admin authentication
@@ -30,7 +30,7 @@ A professional full-stack portfolio website built with:
 - Add/Edit/Delete skills (with category + proficiency level)
 - Add/Edit/Delete certifications
 - Change password
-
+- Change Themes
 ---
 
 ## Prerequisites
@@ -97,24 +97,48 @@ portfolio/
 │   ├── main.rs          # Binary entry point (SSR)
 │   ├── lib.rs           # Library entry point (WASM)
 │   ├── app.rs           # Root App component + routing
+│   ├── api.rs
+│   ├── error.rs
 │   ├── models.rs        # Data models (Profile, Experience, etc.)
 │   ├── state.rs         # Shared client state
 │   ├── components/      # Reusable UI components
+|   |   ├── about.rs
+|   |   ├── certifications.rs
+|   |   ├── contact.rs
+|   |   ├── education.rs
+|   |   ├── experience.rs
+|   |   ├── hero.rs
+|   |   ├── mod.rs
+|   |   ├── nav.rs
+|   |   ├── projects.rs
+|   |   ├── shared.rs
+|   |   └── skills.rs
 │   ├── pages/
+│   │   ├── mod.rs
 │   │   ├── home.rs      # Public portfolio (all sections)
 │   │   ├── login.rs     # Admin login page
-│   │   └── admin.rs     # Admin dashboard
+│   │   └── admin        # Admin dashboard
+│   │       ├── certifications.rs
+│   │       ├── education.rs
+│   │       ├── experience.rs
+│   │       ├── mod.rs
+│   │       ├── profile.rs
+│   │       ├── projects.rs
+│   │       ├── settings.rs
+│   │       ├── shared.rs
+│   │       └── skills.rs
 │   └── server/
 │       ├── mod.rs       # Axum server runner
 │       ├── db.rs        # SQLite database layer
 │       ├── auth.rs      # JWT utilities
-│       └── api.rs       # Server functions (API endpoints)
+│       |── api.rs       # Server functions (API endpoints)
+|       └── pdf.rs
 ├── style/
 │   └── input.css        # TailwindCSS entry
+├── migrations/
+│   └── 001_initial.sql
 ├── Cargo.toml
-├── Leptos.toml          # Leptos config
-├── tailwind.config.js
-└── index.html           # HTML shell (Trunk template)
+└── Cargo.lock
 ```
 
 ---
@@ -131,15 +155,7 @@ portfolio/
 All content is managed through the admin panel at `/admin`. No code changes needed.
 
 ### Changing the Theme
-Edit `tailwind.config.js` and `style/input.css` for colors/fonts.
-
-The color scheme uses:
-- `zinc-950` — darkest background
-- `zinc-900` — card backgrounds
-- `zinc-800` — borders
-- `emerald-400/500` — accent color
-
-To change accent color, search-replace `emerald` with your Tailwind color of choice.
+Edit `style/input.css` for colors/fonts.
 
 ---
 
