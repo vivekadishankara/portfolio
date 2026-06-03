@@ -31,13 +31,22 @@ pub fn HomePage() -> impl IntoView {
 
 #[component]
 fn PortfolioContent(portfolio: PortfolioData) -> impl IntoView {
-    let sections: Vec<String> = portfolio.profile.section_order
+    let PortfolioData { profile, experiences, educations, projects, skills, certifications } = portfolio;
+
+    // Build section list, filtering out sections that have no data
+    let sections: Vec<String> = profile.section_order
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
+        .filter(|s| match s.as_str() {
+            "experience"     => !experiences.is_empty(),
+            "projects"       => !projects.is_empty(),
+            "skills"         => !skills.is_empty(),
+            "education"      => !educations.is_empty(),
+            "certifications" => !certifications.is_empty(),
+            _                => false,
+        })
         .collect();
-
-    let PortfolioData { profile, experiences, educations, projects, skills, certifications } = portfolio;
 
     view! {
         <Title text=profile.name.clone()/>

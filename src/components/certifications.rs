@@ -8,7 +8,7 @@ pub fn CertificationsSection(certifications: Vec<Certification>) -> impl IntoVie
         return view! { <></> }.into_any();
     }
     view! {
-        <section class="py-32 px-6 border-t t-border t-bg-secondary">
+        <section id="certifications" class="py-32 px-6 border-t t-border t-bg-secondary">
             <div class="max-w-6xl mx-auto">
                 <SectionLabel label="06 / Certifications"/>
                 <h2 class="font-syne font-bold text-4xl md:text-5xl t-text-primary mt-6 mb-16">"Credentials"</h2>
