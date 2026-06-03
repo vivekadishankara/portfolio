@@ -34,22 +34,23 @@ fn PortfolioContent(portfolio: PortfolioData) -> impl IntoView {
     let sections: Vec<String> = portfolio.profile.section_order
         .split(',')
         .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
         .collect();
 
     let PortfolioData { profile, experiences, educations, projects, skills, certifications } = portfolio;
 
     view! {
         <Title text=profile.name.clone()/>
-        <NavBar name=profile.name.clone()/>
+        <NavBar name=profile.name.clone() section_order=sections.clone()/>
         <HeroSection profile=profile.clone()/>
         <AboutSection profile=profile.clone()/>
         {sections.into_iter().map(|section| match section.as_str() {
-            "experience"    => view! { <ExperienceSection    experiences=experiences.clone()/>    }.into_any(),
-            "projects"      => view! { <ProjectsSection      projects=projects.clone()/>          }.into_any(),
-            "skills"        => view! { <SkillsSection        skills=skills.clone()/>              }.into_any(),
-            "education"     => view! { <EducationSection     educations=educations.clone()/>      }.into_any(),
-            "certifications"=> view! { <CertificationsSection certifications=certifications.clone()/> }.into_any(),
-            _               => view! { <></> }.into_any(),
+            "experience"     => view! { <ExperienceSection    experiences=experiences.clone()/>         }.into_any(),
+            "projects"       => view! { <ProjectsSection      projects=projects.clone()/>               }.into_any(),
+            "skills"         => view! { <SkillsSection        skills=skills.clone()/>                   }.into_any(),
+            "education"      => view! { <EducationSection     educations=educations.clone()/>           }.into_any(),
+            "certifications" => view! { <CertificationsSection certifications=certifications.clone()/> }.into_any(),
+            _                => view! { <></> }.into_any(),
         }).collect_view()}
         <ContactSection profile=profile/>
         <Footer/>
