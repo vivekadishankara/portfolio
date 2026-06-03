@@ -23,7 +23,7 @@ pub fn ProjectsSection(projects: Vec<Project>) -> impl IntoView {
                                 </div>
                             })}
                             {(!rest.is_empty()).then(|| view! {
-                                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
                                     {rest.into_iter().map(|p| view! { <ProjectCard project=p/> }).collect_view()}
                                 </div>
                             })}
@@ -92,12 +92,13 @@ fn FeaturedCard(project: Project) -> impl IntoView {
 #[component]
 fn ProjectCard(project: Project) -> impl IntoView {
     view! {
-        <div class="border t-border hover:t-border-hover transition-all duration-300 p-6 t-bg-secondary group flex flex-col h-full">
-            <div class="flex items-start justify-between mb-4">
+        <div class="relative border t-border hover:t-accent-border transition-all duration-300 p-6 t-bg-secondary group flex flex-col overflow-hidden">
+            // Normal content — always visible
+            <div class="flex items-start justify-between mb-3">
                 <h3 class="font-syne font-bold text-lg t-text-primary group-hover:t-accent transition-colors">
                     {project.title}
                 </h3>
-                <div class="flex gap-3 ml-4">
+                <div class="flex gap-3 ml-4 shrink-0">
                     {project.github_url.map(|url| view! {
                         <a href={url} target="_blank" class="t-text-muted hover:t-text-primary transition-colors text-xs font-mono">"GH"</a>
                     })}
@@ -106,8 +107,16 @@ fn ProjectCard(project: Project) -> impl IntoView {
                     })}
                 </div>
             </div>
-            <p class="t-text-muted text-sm leading-relaxed flex-1 mb-4">{project.description}</p>
-            <div class="flex flex-wrap gap-1.5">
+
+            // Description — hidden by default, slides in on hover
+            <div class="max-h-0 overflow-hidden group-hover:max-h-40 transition-all duration-300 ease-in-out">
+                <p class="t-text-secondary text-sm leading-relaxed mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
+                    {project.description}
+                </p>
+            </div>
+
+            // Tags — always visible at the bottom
+            <div class="flex flex-wrap gap-1.5 mt-auto pt-3">
                 {project.technologies.into_iter().take(4).map(|t| view! { <TechTag name=t/> }).collect_view()}
             </div>
         </div>
